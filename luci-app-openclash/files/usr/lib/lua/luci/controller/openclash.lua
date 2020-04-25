@@ -5,8 +5,9 @@ function index()
 		return
 	end
 
-
-	entry({"admin", "services", "openclash"},alias("admin", "services", "openclash", "client"), _("OpenClash"), 50).dependent = true
+	local page = entry({"admin", "services", "openclash"}, alias("admin", "services", "openclash", "client"), _("OpenClash"), 50)
+	page.dependent = true
+	page.acl_depends = { "luci-app-openclash" }
 	entry({"admin", "services", "openclash", "client"},form("openclash/client"),_("Overviews"), 20).leaf = true
 	entry({"admin", "services", "openclash", "status"},call("action_status")).leaf=true
 	entry({"admin", "services", "openclash", "state"},call("action_state")).leaf=true
@@ -78,6 +79,13 @@ local function daip()
 		local daip = luci.sys.exec("uci get network.lan.ipaddr 2>/dev/null |awk -F '/' '{print $1}' 2>/dev/null |tr -d '\n'")
 	end
 	return daip
+end
+
+local function uh_port()
+	local uh_port = luci.sys.exec("uci get uhttpd.main.listen_http |awk -F ':' '{print $NF}'")
+	if uh_port ~= "80" then
+		return ":" .. uh_port
+	end
 end
 
 local function dase()
@@ -211,6 +219,7 @@ function action_status()
 		watchdog = is_watchdog(),
 		daip = daip(),
 		dase = dase(),
+		uh_port = uh_port(),
 		web = is_web(),
 		cn_port = cn_port(),
 		mode = mode();
